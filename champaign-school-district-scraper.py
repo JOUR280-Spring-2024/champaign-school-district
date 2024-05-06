@@ -41,16 +41,18 @@ finances = Table('finances', metadata,
 
 metadata.create_all(engine)
 
+link_number = 0
 for link in links:
+    link_number = link_number + 1
+    print(f"{link_number}/{len(links)}: {link}")
     file = requests.get(link)
     with open('./report.pdf', 'wb') as f:
         f.write(file.content)
     with engine.connect() as connection:
         with pdfplumber.open('./report.pdf') as pdf:
-            page_number = -1
+            page_number = 0
             for page in pdf.pages:
                 page_number = page_number + 1
-                print(f"{page_number} {link}")
                 text = page.extract_text()
                 lines = text.split("\n")
                 record_number = 0
@@ -124,6 +126,8 @@ for link in links:
                                 index_elements=['link', 'page_number', 'row'])
                             connection.execute(do_nothing_statement)
                         except Exception as e:
+                            print(f"Error in page {page_number} and row {record_number}.")
+                            print("Record:")
                             print(line.split(" "))
                             raise e
         connection.commit()
